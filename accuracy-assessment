@@ -1,0 +1,43 @@
+from osgeo import gdal
+import pandas as pd
+import numpy as np
+import math
+import sklearn.metrics
+import numpy as npimp
+import pylab
+import matplotlib.pyplot as plt
+
+df_true = np.array(pd.read_csv ('/Users/zijiawang/Desktop/polyugrad/site/test/0/data/AccuracyAssessment/raw/csv/LCT2B3.csv'))
+df_pred = np.array(pd.read_csv ('/Users/zijiawang/Desktop/polyugrad/site/test/0/data/AccuracyAssessment/mod/csv/MODT1B3.csv'))
+df_dem = np.array(pd.read_csv ('/Users/zijiawang/Desktop/polyugrad/site/test/0/data/DEM/DEM.csv'))
+
+def res(actual, predicted):
+    actual = (np.array(actual))/10000
+    predicted = (np.array(predicted))/10000
+    differences = np.subtract(actual, predicted)
+    ad=differences/actual
+    mae = np.sum(np.absolute(predicted - actual)) / len(actual)
+    mse = sklearn.metrics.mean_squared_error(actual, predicted)
+    rmse = math.sqrt(mse)
+    return ad
+    # return mae
+    # return mse
+    # return rmse
+
+res = res(df_true, df_pred)
+# print(res)
+
+# corr_dem = np.corrcoef(res.flatten(), df_dem.flatten())
+# print(corr_dem)
+
+# plt.figure
+plt.imshow(res, cmap=plt.cm.twilight_shifted)
+plt.clim(-0.2,0.2)
+plt.colorbar()
+
+# plt.figure
+# # res[np.isnan(res)] = 0
+# plt.imshow(df_dem, cmap=plt.cm.bone)
+# plt.clim(3250,4750)
+# plt.colorbar()
+plt.show()
