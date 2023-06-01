@@ -1,0 +1,12 @@
+from osgeo import gdal
+import os
+
+root='/Users/zijiawang/Desktop/polyugrad/site/data/1.selectband/LC/T3'
+filenames=os.listdir(root)
+leaf='/Users/zijiawang/Desktop/polyugrad/site/data/4.1clip/LC/T3/'
+bound='/Users/zijiawang/Desktop/polyugrad/site/data/0.rawdata/site.shp'
+
+for f in filenames:
+    if len(f)<10:
+        continue
+    gdal.Warp(leaf+'clip_'+f[:47]+'.tif', root+'/'+f, format="GTiff", cutlineDSName=bound,cropToCutline=True,dstSRS='EPSG:4326')
