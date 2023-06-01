@@ -1,0 +1,43 @@
+import os
+from osgeo import gdal,osr
+from pyhdf.SD import SD, SDC
+import numpy as np
+
+root='/Users/zijiawang/Desktop/polyugrad/site/data/0.rawdata/MOD'
+filenames=os.listdir(root)
+output='/Users/zijiawang/Desktop/polyugrad/site/data/1.selectband/MOD/'
+
+for f in filenames:
+    # MODIS
+    if len(f)<10:
+        continue
+    pth=root+'/'+f
+    rgdal=gdal.Open(pth)
+    subdatasets = rgdal.GetSubDatasets()
+    print(subdatasets)
+    b1=rgdal.GetSubDatasets()[0]
+    gdal.Warp(output+'b1_'+f[:47], b1[0], dstSRS='EPSG:4326', format='GTiff')
+    b2=rgdal.GetSubDatasets()[1]
+    gdal.Warp(output+'b2_'+f[:47], b2[0], dstSRS='EPSG:4326', format='GTiff')
+    b3=rgdal.GetSubDatasets()[2]
+    gdal.Warp(output+'b3_'+f[:47], b3[0], dstSRS='EPSG:4326', format='GTiff')
+    b4=rgdal.GetSubDatasets()[3]
+    gdal.Warp(output+'b4_'+f[:47], b4[0], dstSRS='EPSG:4326', format='GTiff')
+    b5=rgdal.GetSubDatasets()[4]
+    gdal.Warp(output+'b5_'+f[:47], b5[0], dstSRS='EPSG:4326', format='GTiff')
+    b6=rgdal.GetSubDatasets()[5]
+    gdal.Warp(output+'b6_'+f[:47], b6[0], dstSRS='EPSG:4326', format='GTiff')
+    b7=rgdal.GetSubDatasets()[6]
+    gdal.Warp(output+'b7_'+f[:47], b7[0], dstSRS='EPSG:4326', format='GTiff')
+    b8=rgdal.GetSubDatasets()[7]
+    gdal.Warp(output+'500m_sur_refl_qc_'+f[:47], b8[0], dstSRS='EPSG:4326', format='GTiff')
+    b9=rgdal.GetSubDatasets()[8]
+    gdal.Warp(output+'sur_refl_szen_'+f[:47], b9[0], dstSRS='EPSG:4326', format='GTiff')
+    b10=rgdal.GetSubDatasets()[9]
+    gdal.Warp(output+'sur_refl_vzen_'+f[:47], b10[0], dstSRS='EPSG:4326', format='GTiff')
+    b11=rgdal.GetSubDatasets()[10]
+    gdal.Warp(output+'sur_refl_raz_'+f[:47], b11[0], dstSRS='EPSG:4326', format='GTiff')
+    b12=rgdal.GetSubDatasets()[11]
+    gdal.Warp(output+'500m_sur_refl_state_'+f[:47], b12[0], dstSRS='EPSG:4326', format='GTiff')
+    b13=rgdal.GetSubDatasets()[12]
+    gdal.Warp(output+'500m_sur_refl_day_of_year_'+f[:47], b13[0], dstSRS='EPSG:4326', format='GTiff')
