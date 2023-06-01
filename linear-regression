@@ -1,0 +1,96 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+from osgeo import gdal
+import pandas as pd
+import numpy as np
+import math
+import sklearn.metrics
+from pylab import mpl
+from matplotlib.pyplot import MultipleLocator
+
+def estimate_coef(x, y):
+	# number of observations/points
+	n = np.size(x)
+
+	# mean of x and y vector
+	m_x = np.mean(x)
+	m_y = np.mean(y)
+
+	# calculating cross-deviation and deviation about x
+	SS_xy = np.sum(y*x) - n*m_y*m_x
+	SS_xx = np.sum(x*x) - n*m_x*m_x
+
+	# calculating regression coefficients
+	b_1 = SS_xy / SS_xx
+	b_0 = m_y - b_1*m_x
+
+	return (b_0, b_1)
+
+def plot_regression_line(x, y, b):
+	fig, ax = plt.subplots()
+	# plotting the actual points as scatter plot
+	plt.scatter(x, y, color = "m",
+			marker = "o", s = 30)
+
+	# predicted response vector
+	y_pred = b[0] + b[1]*x
+
+	# plotting the regression line
+	plt.plot(x, y_pred, color = "g")
+
+	# putting labels
+	plt.xlabel('Actual')
+	plt.ylabel('Prediction')
+
+	plt.clim(-0.4, 0.4)
+	ax.plot((0, 1), (0, 1), transform=ax.transAxes, ls='--', c='k', label="1:1 line")
+	# function to show plot
+	plt.show()
+
+def mse(actual, predicted):
+	actual = (np.array(actual).reshape(20, 20))/10000
+	predicted = (np.array(predicted).reshape(20, 20))/10000
+	differences = np.subtract(actual, predicted)
+	ad = differences/actual
+	mse = sklearn.metrics.mean_squared_error(actual, predicted)
+	rmse = math.sqrt(mse)
+	return ad
+
+df_true = np.array(pd.read_csv ('/Users/zijiawang/Desktop/polyugrad/site/test/0/data/AccuracyAssessment/raw/csv/LCT2B7.csv')).flatten()/10000
+df_pred = np.array(pd.read_csv ('/Users/zijiawang/Desktop/polyugrad/site/test/0/data/AccuracyAssessment/fsdaf/csv/MODT2B7_FSDAF4.csv')).flatten()/10000
+df_dem = np.array(pd.read_csv ('/Users/zijiawang/Desktop/polyugrad/site/test/0/data/DEM/DEM.csv')).flatten()
+df_sur_refl_qc = np.array(pd.read_csv ('/Users/zijiawang/Desktop/polyugrad/site/test/0/data/AccuracyAssessment/angel/resample/csv/clip_500m_sur_refl_qc_MODT2_MOD09A1.num4X0Y120.csv')).flatten()
+df_sur_refl_raz = np.array(pd.read_csv ('/Users/zijiawang/Desktop/polyugrad/site/test/0/data/AccuracyAssessment/angel/resample/csv/clip_sur_refl_raz_MODT2_MOD09A1.A202num4X0Y120.csv')).flatten()/100
+df_sur_refl_szen = np.array(pd.read_csv ('/Users/zijiawang/Desktop/polyugrad/site/test/0/data/AccuracyAssessment/angel/resample/csv/clip_sur_refl_szen_MODT2_MOD09A1.A20num4X0Y120.csv')).flatten()/100
+df_sur_refl_vzen = np.array(pd.read_csv ('/Users/zijiawang/Desktop/polyugrad/site/test/0/data/AccuracyAssessment/angel/resample/csv/clip_sur_refl_vzen_MODT2_MOD09A1.A20num4X0Y120.csv')).flatten()/100
+
+df_slope = np.array(pd.read_csv ('/Users/zijiawang/Desktop/polyugrad/site/test/0/data/DEM/slope.csv'))
+df_slope = np.delete(df_slope, [0], axis=1).flatten()
+df_aspect = np.array(pd.read_csv ('/Users/zijiawang/Desktop/polyugrad/site/test/0/data/DEM/aspect.csv'))
+df_aspect = np.delete(df_aspect, [0], axis=1).flatten()
+
+def res(actual, predicted):
+    actual = (np.array(actual))/10000
+    predicted = (np.array(predicted))/10000
+    differences = np.subtract(actual, predicted)
+    ad=differences/actual
+    mse = sklearn.metrics.mean_squared_error(actual, predicted)
+    rmse = math.sqrt(mse)
+    mae = np.sum(np.absolute(predicted - actual)) / len(actual)
+    return ad
+    # return mae
+    # return mse
+    # return rmse
+
+res = res(df_true, df_pred)
+
+def main():
+	# observations / data
+	x = df_true
+	y = df_pred
+	b = estimate_coef(x, y)
+	print("Estimated coefficients: \n Slope = {} \n Intercept = {}".format(b[1], b[0]))
+	plot_regression_line(x, y, b)
+
+main()
