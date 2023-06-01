@@ -1,0 +1,24 @@
+import rasterio as rio
+from rasterio.plot import show
+from sklearn import cluster
+import matplotlib.pyplot as plt
+import numpy as np
+import matplotlib.colors as mc
+
+rs = rio.open("/Users/zijiawang/Desktop/polyugrad/site/test/0/data/MOD_resample/b1_MODT2")
+
+rs_data = rs.read()
+vmin, vmax = np.nanpercentile(rs_data, (2, 98))
+rs_data_trans = rs_data.transpose(1,2,0)
+rs_data_1d = rs_data_trans.reshape(-1, rs_data_trans.shape[2])
+cl = cluster.KMeans(n_clusters=5) # create an object of the classifier
+param = cl.fit(rs_data_1d) # train it
+img_cl = cl.labels_
+img_cl = img_cl.reshape(rs_data_trans[:,:,0].shape)
+fig, (ax1,ax2) = plt.subplots(figsize=[15,15], nrows=1,ncols=2)
+show(rs, cmap='gray', vmin=vmin, vmax=vmax, ax=ax1)
+show(img_cl, ax=ax2)
+ax1.set_axis_off()
+ax2.set_axis_off()
+fig.savefig("pred.png", bbox_inches='tight')
+plt.show()
