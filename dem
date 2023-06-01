@@ -1,0 +1,38 @@
+import numpy as np
+import cv2 as cv
+import pandas as pd
+from osgeo import gdal
+
+#坡度计算，输入DEM数据计算坡度，输出坡度栅格，以度为单位
+#输入参数中，data表示栅格数据，x_cellsize表示一个像元在x方向上的长度，如30米DEM数据x_cellsize和y_cellsize都为30
+def ComputeSlope(data, x_cellsize, y_cellsize):
+    kernel_x = np.array([[-1,0,1],[-2,0,2],[-1,0,1]],dtype=int)
+    kernel_y = np.array([[-1,-2,-1],[0,0,0],[1,2,1]],dtype=int)
+    dx = cv.filter2D(data, cv.CV_32F, kernel_x)/(8*x_cellsize) #计算在x方向上的变化率[dz/dx]
+    dy = cv.filter2D(data, cv.CV_32F, kernel_y)/(8*y_cellsize) #计算在y方向上的变化率[dz/dy]
+    slope_degree = np.arctan(np.sqrt(dx*dx+dy*dy)) * 57.29578
+    slope_degree = np.around(slope_degree, decimals=2)  #保留小数点后两位
+    return slope_degree
+
+#坡向计算，坡向介于0（正北）到360（仍是正北）之间，即完整的圆
+#坡向即坡度的方向
+def ComputeAspect(data, x_cellsize, y_cellsize):
+    kernel_x = np.array([[-1,0,1],[-2,0,2],[-1,0,1]],dtype=int)
+    kernel_y = np.array([[-1,-2,-1],[0,0,0],[1,2,1]],dtype=int)
+    dx = cv.filter2D(data, cv.CV_32F, kernel_x)/8
+    dy = cv.filter2D(data, cv.CV_32F, kernel_y)/8
+    aspect = 57.29578 * np.arctan2(dy, -dx)
+    slope = ComputeSlope(data, x_cellsize, y_cellsize)
+    cell = aspect
+    cell[np.where(aspect<0)] = 90 - aspect[np.where(aspect<0)]
+    cell[np.where(aspect>90)] = 360 - aspect[np.where(aspect>90)] + 90
+    cell[np.where(0<=aspect) and np.where(aspect<=90)] = 90 - aspect[np.where(0<=aspect) and np.where(aspect<=90)]
+    cell[np.where(slope==0)] = -1   #零坡度的像元坡向为-1
+    return cell
+
+df_dem = gdal.Open('/Users/zijiawang/Desktop/polyugrad/site/test/0/data/DEM/ASTGTMV003_S18W069_demnum4X0Y1600').ReadAsArray()
+slope=ComputeSlope(df_dem, 30, 30)
+aspect=ComputeAspect(df_dem, 30, 30)
+
+pd.DataFrame(slope).to_csv('/Users/zijiawang/Desktop/polyugrad/site/test/0/data/DEM/slope.csv')
+pd.DataFrame(aspect).to_csv('/Users/zijiawang/Desktop/polyugrad/site/test/0/data/DEM/aspect.csv')
