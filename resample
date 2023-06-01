@@ -1,0 +1,15 @@
+from osgeo import gdal,gdalconst
+import os
+
+root='/Users/zijiawang/Desktop/polyugrad/site/test/0/data/AccuracyAssessment/angel'
+filenames=os.listdir(root)
+leaf='/Users/zijiawang/Desktop/polyugrad/site/test/0/data/AccuracyAssessment/angel/resample'
+
+for f in filenames:
+    if len(f)<10:
+        continue
+    print(f)
+    gdal.Warp(leaf+'/'+f,root+'/'+f,
+              width=400, height=400,
+              resampleAlg=gdalconst.GRIORA_Bilinear,
+              format="GTiff")
