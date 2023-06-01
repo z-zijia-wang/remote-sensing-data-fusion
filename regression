@@ -1,0 +1,64 @@
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import statsmodels.formula.api as smf
+import math
+import sklearn.metrics
+from matplotlib import cm
+
+def res(actual, predicted):
+    actual = (np.array(actual))/10000
+    predicted = (np.array(predicted))/10000
+    differences = np.subtract(actual, predicted)
+    ad=differences/actual
+    mse = sklearn.metrics.mean_squared_error(actual, predicted)
+    rmse = math.sqrt(mse)
+    mae = np.sum(np.absolute(predicted - actual)) / len(actual)
+    return ad
+    # return mae
+    # return mse
+    # return rmse
+
+def moving_average(interval, window_size):
+    window = np.ones(int(window_size)) / float(window_size)
+    return np.convolve(interval, window, 'same')  # numpy的卷积函数
+
+df_true = np.array(pd.read_csv ('/Users/zijiawang/Desktop/polyugrad/site/test/0/data/AccuracyAssessment/raw/csv/LCT2B6.csv')).flatten()
+df_pred = np.array(pd.read_csv ('/Users/zijiawang/Desktop/polyugrad/site/test/0/data/AccuracyAssessment/estarfm/csv/MODT2B6_ESTARFM.csv')).flatten()
+df_dem = np.array(pd.read_csv ('/Users/zijiawang/Desktop/polyugrad/site/test/0/data/DEM/DEM.csv')).flatten()
+df_sur_refl_qc = np.array(pd.read_csv ('/Users/zijiawang/Desktop/polyugrad/site/test/0/data/AccuracyAssessment/angel/resample/csv/clip_500m_sur_refl_qc_MODT2_MOD09A1.num4X0Y120.csv')).flatten()
+df_sur_refl_raz = np.array(pd.read_csv ('/Users/zijiawang/Desktop/polyugrad/site/test/0/data/AccuracyAssessment/angel/resample/csv/clip_sur_refl_raz_MODT2_MOD09A1.A202num4X0Y120.csv')).flatten()/100
+df_sur_refl_szen = np.array(pd.read_csv ('/Users/zijiawang/Desktop/polyugrad/site/test/0/data/AccuracyAssessment/angel/resample/csv/clip_sur_refl_szen_MODT2_MOD09A1.A20num4X0Y120.csv')).flatten()/100
+df_sur_refl_vzen = np.array(pd.read_csv ('/Users/zijiawang/Desktop/polyugrad/site/test/0/data/AccuracyAssessment/angel/resample/csv/clip_sur_refl_vzen_MODT2_MOD09A1.A20num4X0Y120.csv')).flatten()/100
+
+df_slope = np.array(pd.read_csv ('/Users/zijiawang/Desktop/polyugrad/site/test/0/data/DEM/slope.csv'))
+df_slope = np.delete(df_slope, [0], axis=1).flatten()
+df_aspect = np.array(pd.read_csv ('/Users/zijiawang/Desktop/polyugrad/site/test/0/data/DEM/aspect.csv'))
+df_aspect = np.delete(df_aspect, [0], axis=1).flatten()
+
+res = res(df_true, df_pred)
+
+data_x=pd.DataFrame({"Elevation":df_dem,"RelativeAzimuthAngle":df_sur_refl_raz,"SolarZenithAngle":df_sur_refl_szen,"ViewZenithAngle":df_sur_refl_vzen,"Slope":df_slope,"Aspect":df_aspect})
+
+df_dem = moving_average(interval = df_dem, window_size = 5)
+df_aspect = moving_average(interval = df_aspect, window_size = 5)
+df_sur_refl_raz = moving_average(interval = df_sur_refl_raz, window_size = 5)
+res_avg = moving_average(interval = res, window_size = 5)
+
+data_y=pd.DataFrame({"y":res})
+data=pd.concat([data_x,data_y],axis=1)
+mod = smf.ols(formula='y~ViewZenithAngle',data=data)
+fit = mod.fit()
+print(fit.summary())
+
+df_dem=df_dem.reshape(400,400)
+df_aspect=df_aspect.reshape(400,400)
+df_sur_refl_raz=df_sur_refl_raz.reshape(400,400)
+res=res.reshape(400,400)
+
+ax=plt.axes(projection='3d')
+ax.plot_surface(df_aspect,df_dem,res)
+ax.set_xlabel('Aspect')
+ax.set_ylabel('Elevation')
+ax.set_zlabel('Average Difference')
+plt.show()
