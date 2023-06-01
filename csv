@@ -1,0 +1,14 @@
+from osgeo import gdal
+import pandas as pd
+import numpy as np
+import os
+
+gdal.AllRegister()
+path = '/Users/zijiawang/Desktop/polyugrad/site/test/0/data/AccuracyAssessment/angel/resample'
+fileList = os.listdir(path)
+for f in fileList:
+    if f == '.DS_Store' or f == 'csv':
+        continue
+    ds = np.array(gdal.Open(path + '/' + f).ReadAsArray())
+    df = pd.DataFrame(ds)
+    df.to_csv(path + '/csv/' + f + '.csv',index=False)
