@@ -1,0 +1,20 @@
+import os
+from osgeo import gdal
+import numpy as np
+
+root='/Users/zijiawang/Desktop/polyugrad/site/test/data/MOD_resample/'
+
+LS=np.array(gdal.Open(root+'b1_MODT2_ESTARFM'))
+B1=np.array(gdal.Open(root+'b1_MODT2_ESTARFM').GetRasterBand(1).ReadAsArray())
+B2=np.array(gdal.Open(root+'b2_MODT2_ESTARFM').GetRasterBand(1).ReadAsArray())
+B3=np.array(gdal.Open(root+'3_MODT2_ESTARFM').GetRasterBand(1).ReadAsArray())
+
+file_driver = gdal.GetDriverByName('Gtiff')
+output_dataset = file_driver.Create('/Users/zijiawang/Desktop/polyugrad/site/test/data/MOD_resample/ESTARFM.tif', B2.shape[1], B2.shape[0], 3, gdal.GDT_Int16)
+
+output_dataset.SetProjection(LS.GetProjection())
+output_dataset.SetGeoTransform(LS.GetGeoTransform())
+
+output_dataset.GetRasterBand(1).WriteArray(B1)
+output_dataset.GetRasterBand(2).WriteArray(B2)
+output_dataset.GetRasterBand(3).WriteArray(B3)
