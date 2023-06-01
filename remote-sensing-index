@@ -1,0 +1,64 @@
+import rasterio
+import numpy
+import math
+from sympy import *
+
+b1 = "/Users/zijiawang/Desktop/datafusion/data/rawdata/LC/P1_LC_T1_LC08_L2SP_001072_20220615_20220627_02_T1/LC08_L2SP_001072_20220615_20220627_02_T1_SR_B1.TIF"
+b2 = "/Users/zijiawang/Desktop/datafusion/data/rawdata/LC/P1_LC_T1_LC08_L2SP_001072_20220615_20220627_02_T1/LC08_L2SP_001072_20220615_20220627_02_T1_SR_B2.TIF"
+b3 = "/Users/zijiawang/Desktop/datafusion/data/rawdata/LC/P1_LC_T1_LC08_L2SP_001072_20220615_20220627_02_T1/LC08_L2SP_001072_20220615_20220627_02_T1_SR_B3.TIF"
+b4 = "/Users/zijiawang/Desktop/datafusion/data/rawdata/LC/P1_LC_T1_LC08_L2SP_001072_20220615_20220627_02_T1/LC08_L2SP_001072_20220615_20220627_02_T1_SR_B4.TIF"
+b5 = "/Users/zijiawang/Desktop/datafusion/data/rawdata/LC/P1_LC_T1_LC08_L2SP_001072_20220615_20220627_02_T1/LC08_L2SP_001072_20220615_20220627_02_T1_SR_B5.TIF"
+b6 = "/Users/zijiawang/Desktop/datafusion/data/rawdata/LC/P1_LC_T1_LC08_L2SP_001072_20220615_20220627_02_T1/LC08_L2SP_001072_20220615_20220627_02_T1_SR_B6.TIF"
+b7 = "/Users/zijiawang/Desktop/datafusion/data/rawdata/LC/P1_LC_T1_LC08_L2SP_001072_20220615_20220627_02_T1/LC08_L2SP_001072_20220615_20220627_02_T1_SR_B7.TIF"
+
+# Load red and NIR bands - note all PlanetScope 4-band images have band order BGRN
+with rasterio.open(b1) as src:
+    b1 = src.read(1)
+
+with rasterio.open(b2) as src:
+    b2 = src.read(1)
+
+with rasterio.open(b3) as src:
+    b3 = src.read(1)
+
+with rasterio.open(b4) as src:
+    b4 = src.read(1)
+
+with rasterio.open(b5) as src:
+    b5 = src.read(1)
+
+with rasterio.open(b6) as src:
+    b6 = src.read(1)
+
+with rasterio.open(b7) as src:
+    b7 = src.read(1)
+
+ndvi = (b5.astype(float) - b4.astype(float)) / (b5.astype(float) + b4.astype(float))
+# evi_1 = 2.5 * ((b5.astype(float) - b4.astype(float)) / (b5 + 6 * b4 - 7.5 * b2 + 1))
+evi_2 = 2.5 * ((b5.astype(float) - b4.astype(float)) / (b5.astype(float) + 2.4 * b4.astype(float) + 1))
+# msavi_2 = (2 * b5.astype(float) + 1 - math.sqrt(pow(2 * b5.astype(float) + 1, 2) - 8 * (b5.astype(float) - b4.astype(float)))) / 2
+savi = 1.5 * (b5.astype(float) - b4.astype(float))/(b5.astype(float) + b4.astype(float) + 0.5)
+osavi = (b5.astype(float) - b4.astype(float)) / (b5 + b4 + 0.16)
+satvi = ((b6.astype(float) - b4.astype(float)) / (b6.astype(float) + b4.astype(float) + 0.5)) * 1.5 - b7.astype(float) / 2
+avi = pow((b4.astype(float)+1)*(256-b3.astype(float))*(b4.astype(float)-b3.astype(float)),1/3)
+bi = (b4.astype(float)+b2.astype(float)-b3.astype(float)) / (b4.astype(float)+b2.astype(float)+b3.astype(float))
+si = math.sqrt((256-b2.astype(float))*(256-b3.astype(float)))
+ndwi = (b5.astype(float)-b7.astype(float)) / (b5.astype(float)+b7.astype(float))
+msavi2 = (2 * b5.astype(float) + 1 - math.sqrt(pow((2 * b5.astype(float) + 1),2) - 8 * (b5.astype(float) - b4.astype(float)))) / 2
+mtvi2 = (1.5 * (1.2 * (b5.astype(float) − b3.astype(float)) - 2.5 * (b4.astype(float) - b3.astype(float))) / (pow(2 * b5.astype(float) + 1,2) - (6 * b5.astype(float) - 5 * pow(b4.astype(float), 1/2)) - 0.5)
+vari = (b3.astype(float)-b4.astype(float)) / (b3.astype(float)+b4.astype(float)-b2.astype(float))
+tgi = ((120 * (b4.astype(float) - b2.astype(float))) - (190*(b4.astype(float) - b3.astype(float)))) / 2
+ndbi = (b6.astype(float)-b5.astype(float)) / (b6.astype(float)+b5.astype(float))
+
+kwargs = src.meta
+kwargs.update(
+    dtype=rasterio.float32,
+    count = 1)
+
+index=ndvi
+
+with rasterio.open('/Users/zijiawang/Desktop/index.tif', 'w', **kwargs) as dst:
+    dst.write_band(1, index.astype(rasterio.float32))
+
+import matplotlib.pyplot as plt
+plt.imsave("/Users/zijiawang/Desktop/index.png", osavi, cmap=plt.cm.summer)
